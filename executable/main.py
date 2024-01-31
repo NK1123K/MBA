@@ -8,11 +8,11 @@ class Window(QMainWindow):
         super().__init__()
 
         # Window setup
-        self.setWindowTitle('Sidebar layout - www.luochang.ink')
+        self.setWindowTitle('Inventory')
         self.resize(800, 500)  # Set initial size
 
         # Create button 1
-        self.btn_1 = QPushButton('1', self)
+        self.btn_1 = QPushButton('Vendor Screen', self)
         self.btn_1.clicked.connect(self.button1)
 
         # Create tab widget (initially empty)

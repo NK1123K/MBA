@@ -24,48 +24,36 @@ class Page1(QWidget):
         for field in (form_layout.itemAt(i).widget() for i in range(form_layout.rowCount())):
             field.setMaximumWidth(200)  # Adjust if needed
 
-        form_widget = QWidget()
-        form_widget.setLayout(form_layout)
+        # Create a widget for the form and buttons
+        form_and_buttons_widget = QWidget()
+        form_and_buttons_layout = QVBoxLayout(form_and_buttons_widget)
+        form_and_buttons_layout.addLayout(form_layout)
 
-        # Set size policy for the form widget
-        form_widget.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        # Set width to 20% of the overall screen size
-        form_widget.setMaximumWidth(int(QApplication.desktop().screenGeometry().width() * 0.2))
-
-        # View button
-        view_button = QPushButton('View')
-        view_button.clicked.connect(self.view_data)
-
-        # Save button
+        # Buttons
+        delete_button = QPushButton('Delete')  # Changed from 'View' to 'Delete'
         save_button = QPushButton('Save')
-        save_button.clicked.connect(self.save_data)
-
-        # Create a widget for button layout
-        button_widget = QWidget()
-        button_layout = QHBoxLayout(button_widget)
-        button_layout.addWidget(view_button)
-        button_layout.addWidget(save_button)
-
-        # Create a splitter to divide the form and table
-        splitter = QSplitter(Qt.Horizontal)
+        form_and_buttons_layout.addWidget(delete_button)
+        form_and_buttons_layout.addWidget(save_button)
 
         # Table
-        self.table = QTableWidget(5, 6)
+        self.table = QTableWidget(0, 6)
         self.table.setHorizontalHeaderLabels(['Vendor Name', 'GSTIN', 'Phone No', 'Email', 'State', 'Address'])
 
-        # Add widgets to splitter
-        splitter.addWidget(form_widget)
-        splitter.addWidget(button_widget)
-        splitter.addWidget(self.table)
+        # Add a line below the table heading
+        line = QFrame()
+        line.setFrameShape(QFrame.HLine)
+        line.setFrameShadow(QFrame.Sunken)
+        form_and_buttons_layout.addWidget(line)
 
-        # Set the size of the splitter handle (the bar between form and table)
-        splitter.setHandleWidth(1)
-
-        # Set the main layout of the window
+        # Main layout
         main_layout = QHBoxLayout(self)
-        main_layout.addWidget(splitter)
+        main_layout.addWidget(form_and_buttons_widget)
+        main_layout.addWidget(self.table)
 
-        self.setLayout(main_layout)
+        # Connect signals and slots
+        delete_button.clicked.connect(self.delete_data)
+        save_button.clicked.connect(self.save_data)
+        self.table.itemClicked.connect(self.table_item_clicked)  # Connect itemClicked signal
 
     def save_data(self):
         if self.all_fields_filled():
@@ -82,8 +70,23 @@ class Page1(QWidget):
                 self.table.setItem(row, 5, QTableWidgetItem(self.address_edit.text()))
                 self.clear_fields()  # Clear input fields after saving
 
-    def view_data(self):
-        # Implement the action when the "View" button is clicked
+    def delete_data(self):
+        selected_row = self.table.currentRow()
+        if selected_row >= 0:
+            vendor_name = self.table.item(selected_row, 0).text()
+            gstin = self.table.item(selected_row, 1).text()
+
+            confirmation_message = f"Are you sure you want to delete the following data?\n\n"\
+                                   f"Vendor Name: {vendor_name}\n"\
+                                   f"GSTIN: {gstin}"
+
+            reply = QMessageBox.question(self, 'Delete Data', confirmation_message,
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.Yes:
+                self.table.removeRow(selected_row)
+
+    def table_item_clicked(self, item):
+        # Implement the action when an item from the table is clicked
         pass
 
     def all_fields_filled(self):
@@ -94,7 +97,6 @@ class Page1(QWidget):
         for field in (self.vendor_name_edit, self.gstin_edit, self.phone_no_edit,
                       self.email_edit, self.state_edit, self.address_edit):
             field.clear()
-
 
 if __name__ == "__main__":
     app = QApplication([])
