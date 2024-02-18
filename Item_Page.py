@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import *
+from PyQt5.QtCore import *
 
 import mysql.connector
 
@@ -25,6 +26,37 @@ class Item_Page(QWidget):
 
         self.edit_button = QPushButton("Edit")
         self.edit_button.setEnabled(False)  # Initially disable the "Edit" button
+
+        # Install event filter on the application instance
+        QApplication.instance().installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.KeyPress:
+            if isinstance(obj, Item_Page):  # Check if the active widget is an instance of Item_Page
+        #if obj == self and event.type() == QEvent.KeyPress:
+            #if isinstance(Item_Page):
+
+                # Check if Ctrl+S is pressed
+                if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
+                    self.add_data_to_item_table()
+                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
+                    self.clear_item_form()
+                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_R:
+                    self.refresh_item_form()
+                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
+                    self.edit_item_row()
+                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+                    self.delete_selected_rows()
+                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_U:
+                    self.update_data_in_item_table()
+                
+                    return True
+        # Continue processing other events
+        return super().eventFilter(obj, event)
+
+        # # Create a shortcut for Ctrl+S
+        # shortcut = QShortcut(QKeySequence(Qt.ControlModifier + Qt.Key_S), self)
+        # shortcut.activated.connect(self.add_data_to_item_table)
 
 
     def Item_Details(self, layout1):
@@ -132,11 +164,18 @@ class Item_Page(QWidget):
         table_widget.setWidgetResizable(True)  # Allow the table to be scrollable if it doesn't fit
 
         layout1.addWidget(item_form_widget)
+        self.connect_form_fields()
         layout1.addWidget(table_widget)  # Add the table to the layout
 
         for row in range(self.item_table.rowCount()):
             checkbox = self.item_table.cellWidget(row, 0)
             checkbox.stateChanged.connect(self.update_edit_button_state)
+            
+    # To set clear button state based on data presence
+    def connect_form_fields(self):
+        for entry_field in self.item_entry_fields.values():
+            if isinstance(entry_field, QLineEdit):
+                entry_field.textChanged.connect(self.check_item_form_data)
 
     def update_edit_button_state(self):
         # Get the count of selected rows based on the checkboxes
@@ -251,14 +290,16 @@ class Item_Page(QWidget):
 
         # Fetch and display fresh data
         self.fetch_item_data()
+        self.toggle_item_button_state()
         # Disable the "Update" button when there is no data in the table
-        if self.item_table.rowCount() == 0:
-            self.edit_mode = False
-            self.submit_button1.setText("Save")
-            self.submit_button1.setEnabled(True)
-            self.submit_button1.clicked.disconnect()  # Disconnect all connected slots
-            self.submit_button1.clicked.connect(self.add_data_to_item_table)
+        #if self.item_table.rowCount() == 0:
+        self.edit_mode = False
+        self.submit_button1.setText("Save")
+        self.submit_button1.setEnabled(True)
+        self.submit_button1.clicked.disconnect()  # Disconnect all connected slots
+        self.submit_button1.clicked.connect(self.add_data_to_item_table)
 
+    @pyqtSlot()
     def add_data_to_item_table(self):
         mandatory_fields = ["Item Name:"]
         for field in mandatory_fields:
@@ -460,10 +501,13 @@ class Item_Page(QWidget):
                 finally:
                     # Remove the row from the table widget
                     self.item_table.removeRow(row)
+        self.refresh_item_form()
+
     
 # Application execution
 if __name__ == '__main__':
-    app = QApplication([])
+    import sys
+    app = QApplication(sys.argv)
     ex = Item_Page()
     ex.show()
     app.exec_()

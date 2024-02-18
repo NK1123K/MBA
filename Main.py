@@ -1,6 +1,5 @@
 import sys
 from PyQt5.QtWidgets import *
-from PyQt5.QtWidgets import *
 from Vendor_Page import Vendor_Page as VP
 from Item_Page import Item_Page as IP
 
@@ -44,8 +43,21 @@ class Window(QMainWindow):
         item_details_widget = QWidget()
         item_details_layout = QHBoxLayout(item_details_widget)
         item_page_instance = IP()
+        item_page_instance.installEventFilter(item_page_instance)
         item_page_instance.Item_Details(item_details_layout)
         self.stacked_widget.addWidget(item_details_widget)
+
+        # Company information
+        company_name = "Developed by abc"
+        website_url = "www.abs.com"
+        mob_number = "+919150389083"
+ 
+        # Concatenate company information
+        company_info = f"{company_name} | Website: {website_url} | Mobile: {mob_number}"
+
+        # Add a label to display the company information in the status bar
+        company_label = QLabel(company_info, self)
+        self.statusBar().addPermanentWidget(company_label)
 
     def displayContent(self, item):
         selected_item_text = item.text()

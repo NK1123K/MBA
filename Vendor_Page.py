@@ -325,12 +325,12 @@ class Vendor_Page(QWidget):
         # Fetch and display fresh data
         self.fetch_vendor_data()
         # Disable the "Update" button when there is no data in the table
-        if self.vendor_table.rowCount() == 0:
-            self.edit_mode = False
-            self.submit_button1.setText("Save")
-            self.submit_button1.setEnabled(True)
-            self.submit_button1.clicked.disconnect()  # Disconnect all connected slots
-            self.submit_button1.clicked.connect(self.add_data_to_vendor_table)
+        #if self.vendor_table.rowCount() == 0:
+        self.edit_mode = False
+        self.submit_button1.setText("Save")
+        self.submit_button1.setEnabled(True)
+        self.submit_button1.clicked.disconnect()  # Disconnect all connected slots
+        self.submit_button1.clicked.connect(self.add_data_to_vendor_table)
 
     def add_data_to_vendor_table(self):
         mandatory_fields = ["Vendor Name:", "GSTIN:", "Phone No:", "E-Mail:", "State:", "Address:"]
@@ -505,10 +505,11 @@ class Vendor_Page(QWidget):
 
                 except mysql.connector.Error as error:
                     print(f"Failed to delete from MySQL table: {error}")
-                    
+
                 finally:
                     # Remove the row from the table widget
                     self.vendor_table.removeRow(row)
+        self.refresh_form()
 
 # Application execution
 if __name__ == '__main__':
