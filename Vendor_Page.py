@@ -485,9 +485,11 @@ class Vendor_Page(QWidget):
             # Confirmation dialog
             confirmation = QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete the selected rows?',
                                             QMessageBox.Yes | QMessageBox.No)
-        else:
+        elif len(rows_to_delete) == 1:
             confirmation = QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete the selected row?',
                                             QMessageBox.Yes | QMessageBox.No)
+        else:
+            confirmation = QtWidgets.QMessageBox.warning(self, "Error", "Please select a row to delete.")
         
         if confirmation == QMessageBox.Yes:
             # Iterate over the list of rows to delete in reverse order to avoid index issues

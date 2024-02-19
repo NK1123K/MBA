@@ -32,25 +32,21 @@ class Item_Page(QWidget):
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress:
-            if isinstance(obj, Item_Page):  # Check if the active widget is an instance of Item_Page
+            # if isinstance(obj, Item_Page):  # Check if the active widget is an instance of Item_Page
         #if obj == self and event.type() == QEvent.KeyPress:
-            #if isinstance(Item_Page):
 
-                # Check if Ctrl+S is pressed
-                if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
-                    self.add_data_to_item_table()
-                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
-                    self.clear_item_form()
-                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_R:
-                    self.refresh_item_form()
-                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
-                    self.edit_item_row()
-                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
-                    self.delete_selected_rows()
-                elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_U:
-                    self.update_data_in_item_table()
-                
-                    return True
+            # Check if Ctrl+S is pressed
+            if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
+                self.add_data_to_item_table()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
+                self.clear_item_form()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_R:
+                self.refresh_item_form()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
+                self.edit_item_row()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+                self.delete_selected_rows()
+                return True
         # Continue processing other events
         return super().eventFilter(obj, event)
 
@@ -357,33 +353,6 @@ class Item_Page(QWidget):
         if ret == qm.Ok:
             self.refresh_form()
 
-    def delete_item_row(self, row):
-        item_id = self.item_table.item(row, 1).text()  # Assuming ItemID is in the second column
-        reply = QMessageBox.question(self, 'Delete Confirmation', f'Do you want to delete Item with ID {item_id}?',
-                                     QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-
-        if reply == QMessageBox.Yes:
-            # Iterate over the rows in reverse order to avoid index issues when deleting
-            for row in range(self.item_table.rowCount() - 1, -1, -1):
-                # Check if the checkbox in the first column is checked
-                check_box = self.item_table.cellWidget(row, 0)
-                if isinstance(check_box, QCheckBox) and check_box.isChecked():
-                    # Get the item ID from the selected row
-                    item_id = self.item_table.item(row, 1).text()  # Assuming ItemID is in the second column
-
-            try:
-                # Your delete query for the Item table
-                delete_item_query = "DELETE FROM Item WHERE ItemID = %s"
-
-                # Delete the data from the table using the class cursor attribute
-                self.cursor.execute(delete_item_query, (item_id,))
-                self.db_connection.commit()
-
-            except mysql.connector.Error as error:
-                print(f"Failed to delete from MySQL table: {error}")
-            finally:
-                # Refresh the entire form immediately after deleting the data
-                self.refresh_item_form()
 
     def toggle_item_button_state(self):
         if self.edit_mode:
@@ -478,9 +447,11 @@ class Item_Page(QWidget):
             # Confirmation dialog
             confirmation = QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete the selected rows?',
                                             QMessageBox.Yes | QMessageBox.No)
-        else:
+        elif len(rows_to_delete) == 1:
             confirmation = QMessageBox.question(self, 'Confirmation', 'Are you sure you want to delete the selected row?',
                                             QMessageBox.Yes | QMessageBox.No)
+        else:
+            confirmation = QtWidgets.QMessageBox.warning(self, "Error", "Please select a row to delete.")
         
         if confirmation == QMessageBox.Yes:
             # Iterate over the list of rows to delete in reverse order to avoid index issues
