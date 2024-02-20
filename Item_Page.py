@@ -27,33 +27,22 @@ class Item_Page(QWidget):
         self.edit_button = QPushButton("Edit")
         self.edit_button.setEnabled(False)  # Initially disable the "Edit" button
 
-        # Install event filter on the application instance
-        QApplication.instance().installEventFilter(self)
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.KeyPress:
-            # if isinstance(obj, Item_Page):  # Check if the active widget is an instance of Item_Page
-        #if obj == self and event.type() == QEvent.KeyPress:
-
+        # Check if the object triggering the event is the same as the Item_Page instance
+        if (obj is self.item_table or obj is self.item_entry_fields) and event.type() == QEvent.KeyPress:
             # Check if Ctrl+S is pressed
             if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
                 self.add_data_to_item_table()
-            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C and event.key() == Qt.Key_R:
                 self.clear_item_form()
             elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_R:
                 self.refresh_item_form()
             elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
                 self.edit_item_row()
-            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
-                self.delete_selected_rows()
                 return True
         # Continue processing other events
         return super().eventFilter(obj, event)
-
-        # # Create a shortcut for Ctrl+S
-        # shortcut = QShortcut(QKeySequence(Qt.ControlModifier + Qt.Key_S), self)
-        # shortcut.activated.connect(self.add_data_to_item_table)
-
 
     def Item_Details(self, layout1):
         item_form_widget = QWidget()
@@ -166,6 +155,15 @@ class Item_Page(QWidget):
         for row in range(self.item_table.rowCount()):
             checkbox = self.item_table.cellWidget(row, 0)
             checkbox.stateChanged.connect(self.update_edit_button_state)
+
+        # Install event filter on specific widgets or objects
+        self.item_table.installEventFilter(self)
+
+        for row in range(self.item_table.rowCount()):
+            checkbox = self.item_table.cellWidget(row, 0)
+            checkbox.stateChanged.connect(self.update_edit_button_state)
+            # Install event filter on the checkboxes
+            checkbox.installEventFilter(self)
             
     # To set clear button state based on data presence
     def connect_form_fields(self):
