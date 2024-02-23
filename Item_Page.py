@@ -27,10 +27,15 @@ class Item_Page(QWidget):
         self.edit_button = QPushButton("Edit")
         self.edit_button.setEnabled(False)  # Initially disable the "Edit" button
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        QApplication.processEvents()
+        self.item_entry_fields["Item Name:"].setFocus()
+
 
     def eventFilter(self, obj, event):
         # Check if the object triggering the event is the same as the Item_Page instance
-        if (obj is self.item_table or obj is self.item_entry_fields) and event.type() == QEvent.KeyPress:
+        if (obj is self.item_table) and event.type() == QEvent.KeyPress:
             # Check if Ctrl+S is pressed
             if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
                 self.add_data_to_item_table()
@@ -40,6 +45,23 @@ class Item_Page(QWidget):
                 self.refresh_item_form()
             elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
                 self.edit_item_row()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+                self.delete_selected_rows()
+                return True
+            
+        # Check if the object triggering the event is the same as the Item_Page instance
+        elif obj in self.item_entry_fields.values() and event.type() == QEvent.KeyPress:
+            # Check if Ctrl+S is pressed
+            if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_S:
+                self.add_data_to_item_table()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C and event.key() == Qt.Key_R:
+                self.clear_item_form()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_R:
+                self.refresh_item_form()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_E:
+                self.edit_item_row()
+            elif event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_D:
+                self.delete_selected_rows()
                 return True
         # Continue processing other events
         return super().eventFilter(obj, event)
@@ -158,6 +180,13 @@ class Item_Page(QWidget):
 
         # Install event filter on specific widgets or objects
         self.item_table.installEventFilter(self)
+
+        # Install event filter for item_entry_fields (form layout)
+        for entry_field in self.item_entry_fields.values():
+            if isinstance(entry_field, QLineEdit):
+                entry_field.installEventFilter(self)
+
+
 
         for row in range(self.item_table.rowCount()):
             checkbox = self.item_table.cellWidget(row, 0)
